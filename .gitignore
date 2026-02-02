@@ -1,0 +1,6 @@
+*.fasta
+*.txt
+*.png
+alphagenome-env/
+__pycache__/
+.DS_Store
