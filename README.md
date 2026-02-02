@@ -50,4 +50,35 @@ prediction = client.predict_sequence(
 )
 ```
 
+---
+
+## 🚨 Error 404 UNIMPLEMENTED (gRPC) - RESUELTO en v16
+
+### Problema:
+El error `StatusCode.UNIMPLEMENTED - Received http2 header with status: 404` era causado por usar el **endpoint incorrecto**.
+
+### Causa raíz:
+| Componente | Script v15 (INCORRECTO) | Librería oficial (CORRECTO) |
+|------------|-------------------------|------------------------------|
+| **Host** | `alphagenome-api.googleapis.com:443` | `gdmscience.googleapis.com:443` |
+| **Service Path** | N/A | `/google.gdm.gdmscience.alphagenome.v1main.DnaModelService/` |
+
+### Solución (v16):
+Usar `dna_client.create()` que configura el endpoint correcto automáticamente:
+
+```python
+from alphagenome.models import dna_client
+
+# CORRECTO - usa gdmscience.googleapis.com internamente
+client = dna_client.create(api_key=API_KEY, timeout=30.0)
+```
+
+**NO usar** configuración manual del canal con `alphagenome-api.googleapis.com`.
+
+### Archivos actualizados:
+- `analisis_comt_final_v16.py` - Script corregido con endpoint correcto
+- `diagnostico_grpc.py` - Script de diagnóstico para verificar conectividad
+
+---
+
 **Nota:** Los archivos `.fasta` y `.txt` no se han subido por razones de peso y privacidad.
