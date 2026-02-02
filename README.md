@@ -10,21 +10,44 @@ Predecir la accesibilidad de cromatina (**ATAC**) y la expresión génica (**RNA
 - `analisis_comt_final_v14.py`: Último script intentado.
 - `instrucciones.json`: Guía oficial de comandos esenciales de AlphaGenome.
 
-## 🛑 Estado actual y Errores
-Hemos superado los errores de conexión gRPC (404), pero estamos bloqueados en la instanciación de los parámetros biológicos.
+## 🛑 Estado actual y Errores (RESUELTO)
 
-### Último Error detectado:
-`TypeError: OntologyTerm.__init__() missing 1 required positional argument: 'type'`
+### Problema resuelto:
+La firma correcta de `OntologyTerm` es:
+```python
+OntologyTerm(type: OntologyType, id: int)
+```
 
-### Intentos fallidos en `OntologyTerm`:
-1. `OntologyTerm(id='')` -> Falla por falta de 'type'.
-2. `OntologyTerm(term_id='')` -> Falla porque el argumento se llama 'id'.
+### OntologyType Enum Values:
+| Enum | Valor | Descripcion |
+|------|-------|-------------|
+| `OntologyType.CLO` | 1 | Cell Line Ontology |
+| `OntologyType.UBERON` | 2 | Uber-anatomy ontology |
+| `OntologyType.CL` | 3 | Cell Ontology |
+| `OntologyType.EFO` | 4 | Experimental Factor Ontology |
+| `OntologyType.NTR` | 5 | New Term Requested |
 
-## 🛠 Instrucciones para Claude/Asistente:
-Por favor, analiza el archivo `src/alphagenome/data/ontology.py` para determinar el orden exacto de los argumentos del constructor `__init__` de la clase `OntologyTerm`. 
-Necesitamos construir una petición válida para `client.predict_sequence` que incluya:
-- `sequence`: (Fragmento de 131,072 bp).
-- `requested_outputs`: [ATAC, RNA_SEQ].
-- `ontology_terms`: Una lista con al menos un término válido (probablemente requiere un `OntologyType`).
+### Conversion de CURIE a OntologyTerm:
+```python
+# 'UBERON:0002048' (Lung) -> OntologyTerm(OntologyType.UBERON, 2048)
+# 'CL:0000084' (T-cell)   -> OntologyTerm(OntologyType.CL, 84)
+# 'EFO:0002067' (K562)    -> OntologyTerm(OntologyType.EFO, 2067)
+
+from alphagenome.data.ontology import OntologyTerm, OntologyType
+
+terminos_bio = [
+    OntologyTerm(OntologyType.UBERON, 955),  # Brain (UBERON:0000955)
+]
+```
+
+## 🛠 Solucion implementada:
+Ver archivo `analisis_comt_final_v15.py` con la llamada correcta:
+```python
+prediction = client.predict_sequence(
+    sequence=fragmento,
+    requested_outputs=[dna_output.OutputType.ATAC, dna_output.OutputType.RNA_SEQ],
+    ontology_terms=[OntologyTerm(OntologyType.UBERON, 955)]  # Brain
+)
+```
 
 **Nota:** Los archivos `.fasta` y `.txt` no se han subido por razones de peso y privacidad.
